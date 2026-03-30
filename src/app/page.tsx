@@ -1,5 +1,8 @@
+'use client';
+
 import Link from 'next/link';
 import Logo from '@/components/ui/Logo';
+import { useScrollAnimation } from '@/lib/hooks/useScrollAnimation';
 
 function Header() {
   return (
@@ -27,19 +30,19 @@ function HeroSection() {
     <section className="pt-28 pb-16 lg:pt-40 lg:pb-24">
       <div className="max-w-6xl mx-auto px-6">
         <div className="max-w-2xl">
-          <p className="text-sm font-medium text-primary mb-4 tracking-wide">
+          <p className="hero-animate hero-delay-1 text-sm font-medium text-primary mb-4 tracking-wide">
             Accepting &lt;30% of applicants
           </p>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold leading-[1.1] tracking-tight text-text-primary mb-6">
+          <h1 className="hero-animate hero-delay-2 text-4xl sm:text-5xl lg:text-6xl font-semibold leading-[1.1] tracking-tight text-text-primary mb-6">
             Stop networking.
             <br />
             Start building together.
           </h1>
-          <p className="text-lg text-text-secondary leading-relaxed max-w-lg mb-8">
+          <p className="hero-animate hero-delay-3 text-lg text-text-secondary leading-relaxed max-w-lg mb-8">
             Alyned is the vetted network for founders, investors, and operators.
             Five curated matches a day. Focused rooms. Zero noise.
           </p>
-          <div className="flex items-center gap-4">
+          <div className="hero-animate hero-delay-4 flex items-center gap-4">
             <Link
               href="/waitlist"
               className="btn-primary px-6 py-2.5 text-sm font-medium"
@@ -56,7 +59,7 @@ function HeroSection() {
         </div>
 
         {/* Product preview — real UI mockup, not abstract illustration */}
-        <div className="mt-16 lg:mt-20">
+        <div className="hero-animate hero-delay-4 mt-16 lg:mt-20">
           <div className="card p-1 max-w-4xl">
             <div className="bg-surface-light rounded-[5px] p-4 sm:p-6">
               {/* Mock room header */}
@@ -118,8 +121,8 @@ function SocialProofSection() {
     <section className="py-16 border-y border-border">
       <div className="max-w-6xl mx-auto px-6">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
-          {stats.map((stat) => (
-            <div key={stat.label} className="text-center">
+          {stats.map((stat, i) => (
+            <div key={stat.label} className={`animate-on-scroll counter stagger-${i + 1} text-center`}>
               <p className="text-2xl sm:text-3xl font-semibold text-text-primary tracking-tight">{stat.value}</p>
               <p className="text-sm text-text-muted mt-1">{stat.label}</p>
             </div>
@@ -155,7 +158,7 @@ function HowItWorksSection() {
   return (
     <section id="how-it-works" className="py-20 lg:py-28">
       <div className="max-w-6xl mx-auto px-6">
-        <div className="mb-14">
+        <div className="animate-on-scroll mb-14">
           <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-text-primary mb-3">
             Three ways to connect
           </h2>
@@ -165,10 +168,10 @@ function HowItWorksSection() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {modes.map((mode) => (
+          {modes.map((mode, i) => (
             <div
               key={mode.title}
-              className="card p-6 group"
+              className={`animate-on-scroll scale-in stagger-${i + 1} card p-6 group hover:border-border-light transition-colors duration-200`}
             >
               <span className="text-xs font-mono text-text-muted">{mode.number}</span>
               <h3 className="text-lg font-semibold text-text-primary mt-3 mb-2">
@@ -234,7 +237,7 @@ function TierSection() {
   return (
     <section id="tiers" className="py-20 lg:py-28">
       <div className="max-w-6xl mx-auto px-6">
-        <div className="mb-14">
+        <div className="animate-on-scroll mb-14">
           <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-text-primary mb-3">
             Earn your tier
           </h2>
@@ -244,10 +247,10 @@ function TierSection() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {tiers.map((tier) => (
+          {tiers.map((tier, i) => (
             <div
               key={tier.name}
-              className={`rounded-lg border ${tier.borderColor} ${tier.bgAccent} p-6`}
+              className={`animate-on-scroll scale-in stagger-${i + 1} rounded-lg border ${tier.borderColor} ${tier.bgAccent} p-6 hover:border-opacity-50 transition-colors duration-200`}
             >
               <div className="flex items-baseline justify-between mb-4">
                 <h3 className={`text-lg font-semibold ${tier.color}`}>
@@ -296,7 +299,7 @@ function WhySection() {
   return (
     <section id="why" className="py-20 lg:py-28 border-t border-border">
       <div className="max-w-6xl mx-auto px-6">
-        <div className="mb-14">
+        <div className="animate-on-scroll mb-14">
           <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-text-primary mb-3">
             Why Alyned exists
           </h2>
@@ -307,8 +310,8 @@ function WhySection() {
         </div>
 
         <div className="grid sm:grid-cols-2 gap-x-12 gap-y-10">
-          {reasons.map((reason) => (
-            <div key={reason.title}>
+          {reasons.map((reason, i) => (
+            <div key={reason.title} className={`animate-on-scroll slide-left stagger-${i + 1}`}>
               <h3 className="text-base font-semibold text-text-primary mb-2">{reason.title}</h3>
               <p className="text-sm text-text-secondary leading-relaxed">{reason.description}</p>
             </div>
@@ -332,7 +335,7 @@ function MemberTypesSection() {
   return (
     <section className="py-20 lg:py-28 border-t border-border">
       <div className="max-w-6xl mx-auto px-6">
-        <div className="max-w-2xl mx-auto text-center mb-14">
+        <div className="animate-on-scroll max-w-2xl mx-auto text-center mb-14">
           <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-text-primary mb-3">
             The founders you need to know are already here
           </h2>
@@ -342,8 +345,8 @@ function MemberTypesSection() {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-3xl mx-auto">
-          {types.map((type) => (
-            <div key={type.role} className="card p-4">
+          {types.map((type, i) => (
+            <div key={type.role} className={`animate-on-scroll scale-in stagger-${i + 1} card p-4 hover:border-border-light transition-colors duration-200`}>
               <p className="text-sm font-medium text-text-primary">{type.role}</p>
               <p className="text-xs text-text-muted mt-0.5">{type.detail}</p>
             </div>
@@ -358,7 +361,7 @@ function FinalCTA() {
   return (
     <section className="py-20 lg:py-28 border-t border-border">
       <div className="max-w-6xl mx-auto px-6">
-        <div className="max-w-xl mx-auto text-center">
+        <div className="animate-on-scroll max-w-xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-text-primary mb-4">
             Ready to stop scrolling and start building?
           </h2>
@@ -394,6 +397,8 @@ function Footer() {
 }
 
 export default function LandingPage() {
+  useScrollAnimation();
+
   return (
     <>
       <Header />
