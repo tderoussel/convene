@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Convene
+
+The curated network for founders, investors, and operators. Five matches a day. Focused rooms. Zero noise.
+
+## Tech Stack
+
+- **Framework:** Next.js 16 (App Router, `src/` directory)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS 4 (design tokens via `@theme inline` in globals.css)
+- **State:** Zustand with persist middleware
+- **Backend:** Supabase (Postgres + RLS + Edge Functions + Realtime)
+- **Fonts:** Inter + JetBrains Mono (via `next/font/google`)
+- **Deployment:** Vercel
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+# Install dependencies
+npm install
+
+# Run in demo mode (no Supabase needed)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Run with Supabase
+cp .env.local.example .env.local
+# Fill in your Supabase credentials
+# Set NEXT_PUBLIC_USE_SUPABASE=true
+npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Demo Mode
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+By default, the app runs in demo mode with 30 seed member profiles, 10 rooms, and realistic conversation data. Click "Try Demo Mode" on the login page to explore the full app as Raj Patel (Catalyst tier).
 
-## Learn More
+## Environment Variables
 
-To learn more about Next.js, take a look at the following resources:
+| Variable | Description |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/public key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server-side only) |
+| `NEXT_PUBLIC_USE_SUPABASE` | Set to `"true"` to enable live database |
+| `NEXT_PUBLIC_SITE_URL` | App URL (used for auth callbacks) |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+  app/                 # Next.js App Router pages
+    dashboard/         # Authenticated app pages
+    admin/             # Admin-only pages
+  components/
+    ui/                # Design system (Logo, TierBadge, ReputationBadge)
+    dashboard/         # Dashboard components (Sidebar)
+    rooms/             # Room components (MessageBubble, CreateRoomModal)
+    members/           # Member components (MemberCard)
+  lib/
+    store.ts           # Zustand global state
+    constants.ts       # App constants, tier thresholds, admin emails
+    tiers.ts           # Tier utility functions
+    feature-flags.ts   # Demo/live mode flags
+    supabase/          # Supabase client helpers (client, server, admin)
+  data/                # Seed data for demo mode
+  types/               # TypeScript interfaces
+  proxy.ts             # Auth middleware (Next.js proxy)
+supabase/
+  migrations/          # SQL schema and RLS policies
+```
 
-## Deploy on Vercel
+## Tier System
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Tier | Rep Required | Access |
+|---|---|---|
+| Explorer | 0+ | Public rooms, daily feed, requests |
+| Builder | 100+ | Private rooms, DMs (15/day), room creation |
+| Catalyst | 500+ | Unlimited DMs, elevations, Catalyst Lounge |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Admin
+
+Emails in `ADMIN_EMAILS` (src/lib/constants.ts) can access `/admin/*` routes. Currently: `tderoussel@gmail.com`.
+
+## Database Migrations
+
+Three files in `supabase/migrations/`:
+1. `001_initial_schema.sql` — Tables, indexes, triggers
+2. `002_rls_policies.sql` — Row Level Security policies
+3. `003_security_fixes.sql` — Security hardening, delete policies, connections, audit log
+
+Run migrations in order in your Supabase SQL editor.
