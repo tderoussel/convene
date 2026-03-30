@@ -62,7 +62,7 @@ export default function LoginPage() {
             Welcome back
           </h1>
           <p className="text-sm text-text-muted text-center mb-6">
-            Sign in to your Convene account
+            Sign in to your Alyned account
           </p>
 
           <form onSubmit={handleLogin} className="space-y-4">

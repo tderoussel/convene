@@ -97,7 +97,7 @@ function WaitlistForm() {
       <div className="max-w-xl mx-auto px-6 py-12">
         <div className="mb-8">
           <h1 className="text-2xl font-semibold tracking-tight text-text-primary mb-2">Apply for access</h1>
-          <p className="text-sm text-text-muted">Convene is invite-only. Tell us about yourself and we&apos;ll review your application.</p>
+          <p className="text-sm text-text-muted">Alyned is invite-only. Tell us about yourself and we&apos;ll review your application.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">

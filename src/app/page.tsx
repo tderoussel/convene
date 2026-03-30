@@ -9,7 +9,7 @@ function Header() {
         <nav className="hidden sm:flex items-center gap-8">
           <a href="#how-it-works" className="text-sm text-text-muted hover:text-text-primary transition-colors">How it works</a>
           <a href="#tiers" className="text-sm text-text-muted hover:text-text-primary transition-colors">Tiers</a>
-          <a href="#why" className="text-sm text-text-muted hover:text-text-primary transition-colors">Why Convene</a>
+          <a href="#why" className="text-sm text-text-muted hover:text-text-primary transition-colors">Why Alyned</a>
         </nav>
         <Link
           href="/waitlist"
@@ -36,7 +36,7 @@ function HeroSection() {
             Start building together.
           </h1>
           <p className="text-lg text-text-secondary leading-relaxed max-w-lg mb-8">
-            Convene is the vetted network for founders, investors, and operators.
+            Alyned is the vetted network for founders, investors, and operators.
             Five curated matches a day. Focused rooms. Zero noise.
           </p>
           <div className="flex items-center gap-4">
@@ -298,7 +298,7 @@ function WhySection() {
       <div className="max-w-6xl mx-auto px-6">
         <div className="mb-14">
           <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-text-primary mb-3">
-            Why Convene exists
+            Why Alyned exists
           </h2>
           <p className="text-text-secondary max-w-lg">
             LinkedIn is a content farm. Twitter is a performance. Hampton costs $8.5K.
@@ -337,7 +337,7 @@ function MemberTypesSection() {
             The founders you need to know are already here
           </h2>
           <p className="text-text-secondary">
-            Convene members are building real companies, investing real capital, and shipping real products.
+            Alyned members are building real companies, investing real capital, and shipping real products.
           </p>
         </div>
 
@@ -381,12 +381,12 @@ function Footer() {
   return (
     <footer className="border-t border-border py-8">
       <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <span className="text-xs text-text-muted">&copy; 2026 Convene. All rights reserved.</span>
+        <span className="text-xs text-text-muted">&copy; 2026 Alyned. All rights reserved.</span>
         <div className="flex items-center gap-6 text-xs text-text-muted">
           <Link href="/about" className="hover:text-text-secondary transition-colors">About</Link>
           <Link href="/privacy" className="hover:text-text-secondary transition-colors">Privacy</Link>
           <Link href="/terms" className="hover:text-text-secondary transition-colors">Terms</Link>
-          <a href="mailto:hello@convene.app" className="hover:text-text-secondary transition-colors">Contact</a>
+          <a href="mailto:hello@alyned.app" className="hover:text-text-secondary transition-colors">Contact</a>
         </div>
       </div>
     </footer>

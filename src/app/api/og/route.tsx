@@ -33,15 +33,14 @@ export async function GET() {
           <svg
             width="44"
             height="44"
-            viewBox="0 0 24 24"
+            viewBox="0 0 32 32"
             fill="none"
           >
             <path
-              d="M17.5 6.5C16 5 14 4 12 4C7.58 4 4 7.58 4 12s3.58 8 8 8c2 0 3.5-.5 5.5-2.5"
-              stroke="white"
-              strokeWidth="2.5"
-              strokeLinecap="round"
+              d="M16 4L7 28H11.5L13.5 22.5H18.5L20.5 28H25L16 4Z"
+              fill="white"
             />
+            <line x1="12.5" y1="19" x2="19.5" y2="19" stroke="#DC2626" strokeWidth="2" />
           </svg>
         </div>
 
@@ -55,7 +54,7 @@ export async function GET() {
             marginBottom: "16",
           }}
         >
-          Convene
+          Alyned
         </div>
 
         {/* Subtitle */}

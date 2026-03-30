@@ -18,11 +18,11 @@ export default function TermsPage() {
         <div className="space-y-6 text-sm text-text-secondary leading-relaxed">
           <section>
             <h2 className="text-sm font-semibold text-text-primary mb-2">1. Acceptance of Terms</h2>
-            <p>By accessing or using Convene, you agree to be bound by these Terms of Service. If you do not agree, you may not use the platform.</p>
+            <p>By accessing or using Alyned, you agree to be bound by these Terms of Service. If you do not agree, you may not use the platform.</p>
           </section>
           <section>
             <h2 className="text-sm font-semibold text-text-primary mb-2">2. Eligibility</h2>
-            <p>Convene is an invite-only platform. Access is granted at our sole discretion. You must be at least 18 years old and provide accurate information.</p>
+            <p>Alyned is an invite-only platform. Access is granted at our sole discretion. You must be at least 18 years old and provide accurate information.</p>
           </section>
           <section>
             <h2 className="text-sm font-semibold text-text-primary mb-2">3. Conduct</h2>
@@ -34,7 +34,7 @@ export default function TermsPage() {
           </section>
           <section>
             <h2 className="text-sm font-semibold text-text-primary mb-2">5. Content</h2>
-            <p>You retain ownership of content you post. By posting, you grant Convene a non-exclusive license to display it within the platform.</p>
+            <p>You retain ownership of content you post. By posting, you grant Alyned a non-exclusive license to display it within the platform.</p>
           </section>
           <section>
             <h2 className="text-sm font-semibold text-text-primary mb-2">6. Termination</h2>
@@ -42,11 +42,11 @@ export default function TermsPage() {
           </section>
           <section>
             <h2 className="text-sm font-semibold text-text-primary mb-2">7. Limitation of Liability</h2>
-            <p>Convene is provided &quot;as is&quot; without warranties. We are not liable for damages arising from your use of the platform.</p>
+            <p>Alyned is provided &quot;as is&quot; without warranties. We are not liable for damages arising from your use of the platform.</p>
           </section>
           <section>
             <h2 className="text-sm font-semibold text-text-primary mb-2">8. Contact</h2>
-            <p>Questions? Email <a href="mailto:legal@convene.app" className="text-primary hover:text-primary-hover transition-colors">legal@convene.app</a>.</p>
+            <p>Questions? Email <a href="mailto:legal@alyned.app" className="text-primary hover:text-primary-hover transition-colors">legal@alyned.app</a>.</p>
           </section>
         </div>
       </div>

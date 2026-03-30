@@ -105,7 +105,7 @@ export const useAppStore = create<AppState>()(
         }),
     }),
     {
-      name: 'convene-store',
+      name: 'alyned-store',
       partialize: (state) => ({
         currentUser: state.currentUser,
         isAuthenticated: state.isAuthenticated,

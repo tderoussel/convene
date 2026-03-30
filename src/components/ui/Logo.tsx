@@ -13,8 +13,8 @@ const sizes = {
 };
 
 /**
- * Convene logo — geometric "C" mark + wordmark.
- * The icon is an abstract angular "C" that suggests convergence/connection.
+ * Alyned logo — geometric "A" mark + wordmark.
+ * The icon is an abstract angular "A" that suggests alignment/connection.
  * Built as inline SVG for instant rendering at any size.
  */
 export default function Logo({ variant = "wordmark", className = "", size = "md" }: LogoProps) {
@@ -29,14 +29,13 @@ export default function Logo({ variant = "wordmark", className = "", size = "md"
       xmlns="http://www.w3.org/2000/svg"
       className="shrink-0"
     >
-      {/* Angular C shape — sharp, geometric, premium */}
+      {/* Angular A shape — sharp, geometric, premium */}
       <rect width="32" height="32" rx="7" fill="#DC2626" />
       <path
-        d="M22 9.5H14C11.5147 9.5 9.5 11.5147 9.5 14V18C9.5 20.4853 11.5147 22.5 14 22.5H22"
-        stroke="white"
-        strokeWidth="2.5"
-        strokeLinecap="round"
+        d="M16 8L9.5 24H12.5L14 20H18L19.5 24H22.5L16 8Z"
+        fill="white"
       />
+      <line x1="13" y1="17.5" x2="19" y2="17.5" stroke="#DC2626" strokeWidth="1.5" />
     </svg>
   );
 
@@ -48,7 +47,7 @@ export default function Logo({ variant = "wordmark", className = "", size = "md"
     <div className={`flex items-center gap-2 ${className}`}>
       {iconMark}
       <span className={`${s.text} font-semibold tracking-tight text-text-primary`}>
-        Convene
+        Alyned
       </span>
     </div>
   );

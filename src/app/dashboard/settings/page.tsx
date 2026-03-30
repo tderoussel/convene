@@ -88,7 +88,7 @@ export default function SettingsPage() {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'convene-data.json';
+            a.download = 'alyned-data.json';
             a.click();
             URL.revokeObjectURL(url);
           }}

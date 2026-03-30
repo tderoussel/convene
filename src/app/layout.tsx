@@ -15,19 +15,19 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Convene — The Curated Network for Builders",
+  title: "Alyned — The Curated Network for Builders",
   description:
-    "Convene is the vetted network for founders, investors, and operators. Curated matches, focused rooms, zero noise. Apply for access.",
+    "Alyned is the vetted network for founders, investors, and operators. Curated matches, focused rooms, zero noise. Apply for access.",
   openGraph: {
-    title: "Convene — The Curated Network for Builders",
+    title: "Alyned — The Curated Network for Builders",
     description: "The vetted network for founders, investors, and operators. Apply for access.",
-    siteName: "Convene",
+    siteName: "Alyned",
     type: "website",
-    images: [{ url: "/api/og", width: 1200, height: 630, alt: "Convene — Where ambitious builders connect" }],
+    images: [{ url: "/api/og", width: 1200, height: 630, alt: "Alyned — Where ambitious builders connect" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Convene — The Curated Network for Builders",
+    title: "Alyned — The Curated Network for Builders",
     description: "The vetted network for founders, investors, and operators.",
     images: ["/api/og"],
   },

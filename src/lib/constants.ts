@@ -26,5 +26,5 @@ export const REPUTATION_POINTS = {
 export const ADMIN_EMAILS: string[] = ['tderoussel@gmail.com'];
 
 /** App-wide branding constants. */
-export const APP_NAME = 'Convene' as const;
+export const APP_NAME = 'Alyned' as const;
 export const APP_TAGLINE = 'Where ambitious builders connect' as const;
