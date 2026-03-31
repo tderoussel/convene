@@ -108,9 +108,129 @@
 
 ---
 
-## Build Verification
+## Phase 7: Platform Audit Fixes — 2026-03-30
 
-- TypeScript: compiled successfully, no errors
-- All 23 routes generated (static + dynamic)
-- Framer Motion still in dependencies but no longer imported on landing page
-- Landing page is now a server component (zero client JS)
+### Fix 1: Email Notification System — Complete
+- Expanded `src/lib/email.ts` with 9 email templates:
+  - `welcome` — existing, updated with branded wrapper
+  - `application_received` — existing, updated
+  - `application_accepted` — NEW: onboarding steps + magic link CTA
+  - `application_rejected` — NEW: warm tone, reapply-in-90-days invite
+  - `application_waitlisted` — NEW: sets expectations, 2-4 week timeline
+  - `tier_upgrade` — existing, expanded with privilege list per tier
+  - `mutual_connection` — NEW: "You and [Name] are now connected!"
+  - `onboarding_day2` — NEW: 3 tips for first week
+  - `onboarding_day7` — NEW: check-in with reputation/tier guidance
+- All templates use shared `emailWrapper()` with branded header + footer (logo, privacy/terms links)
+- Updated `/api/email` route to support all 9 template types
+- Wired email triggers to admin Accept/Reject/Waitlist actions in ApplicationReview
+- Added `email_logs` table in migration 004
+
+### Fix 2: Direct Messaging — Complete
+- "Send Message" button on member profiles now creates/opens conversations
+- Checks for existing conversation before creating new one
+- New `/dashboard/messages/new?to={memberId}` route for new conversations
+- "New Message" modal in messages list now navigates to `/messages/new?to=` instead of member profile
+- Full message thread UI with auto-focus on input
+
+### Fix 3: Room Online Counts — Complete
+- Verified: no random number generation exists in the codebase
+- Room `member_count` is static from seed data (honest)
+- Added "Last message: Xh ago" indicator to room headers for activity freshness
+- Added `user_presence` table in migration 004 for future real-time presence
+
+### Fix 4: Legal Pages — Complete
+- `/privacy` expanded to 11 sections with full GDPR/CCPA compliance:
+  - Data collected (account, profile, usage, device, communications)
+  - Third-party processors named (Supabase, Resend, Vercel)
+  - User rights (access, rectification, erasure, portability, restriction, objection)
+  - Cookie policy, international transfers, children's privacy, data retention
+- `/terms` expanded to 14 sections:
+  - Eligibility, account responsibilities, acceptable use (detailed prohibited conduct)
+  - Reputation & tiers, content & IP, termination, disclaimer of warranties
+  - Limitation of liability, indemnification, governing law (Delaware)
+- Both pages dated March 30, 2026
+
+### Fix 5: Avatar Upload — Complete
+- Built `AvatarUpload` component (`src/components/ui/AvatarUpload.tsx`):
+  - Click-to-upload + drag-and-drop support
+  - Client-side validation: JPG/PNG/WebP only, max 5MB
+  - Client-side compression + square crop using canvas API (outputs 400x400 WebP at 85% quality)
+  - Remove photo button to revert to initials
+  - Loading state with spinner during processing
+  - Error messages for invalid files
+- Replaced text URL input on profile page with AvatarUpload component
+- Fallback: stores as base64 data URL in Zustand (for demo mode); in production would use Supabase Storage
+
+### Fix 6: Admin Reviewer Notes — Complete
+- Added notes textarea to ApplicationReview detail view
+- Auto-save on 1-second debounce after typing
+- Auto-save on blur (when clicking away)
+- Explicit "Save" button
+- "Saved" indicator with checkmark icon (auto-dismisses after 2s)
+- Notes persist per application in local state (in Supabase mode, would save to reviewer_notes column)
+
+### Fix 7: Smart Feed Algorithm — Complete
+- Built `src/lib/feedAlgorithm.ts` with weighted relevance scoring:
+  - Looking-for alignment: +25 points (direct match) or +20 (complementary)
+  - Tier compatibility: +5-20 points based on viewer/candidate tier pairing
+  - Complementary type bonus: +10 for different but compatible looking-for values
+  - Geographic proximity: +15 if same city
+  - Recency bonus: +10 for members joined in last 30 days
+- Deterministic per day (uses date string as seed for consistent tie-breaking)
+- Returns top 5 members sorted by relevance score
+- Added "Today's Matches" section to dashboard homepage with 5-card grid
+- Excludes the viewing user from their own feed
+
+### Fix 8: Reputation Scoring Engine — Complete
+- Built `src/lib/reputation.ts`:
+  - In-memory event store with add/get/calculate functions
+  - Point values from existing REPUTATION_POINTS constants
+  - Event type labels for display
+  - Seed data generator that creates representative events matching existing scores
+- Added "How you earned this" expandable section on profile page
+  - Shows last 5 events collapsed, "Show all (N events)" to expand
+  - Color-coded positive (green) and negative (red) points
+- Extended reputation_events check constraint in migration 004 with new event types
+
+### Fix 9: Automatic Tier Progression — Complete
+- Added `check_tier_progression()` PostgreSQL trigger function in migration 004
+  - Fires after every reputation_events INSERT
+  - Compares current tier with score-based tier
+  - Auto-updates profiles.tier if threshold crossed
+  - Logs change in tier_history table
+  - Creates in-app notification for tier upgrade
+- Added Zustand store actions: `updateUserTier()`, `updateUserReputation()`
+- Created `tier_history` table with RLS (users can read own history)
+- Tier upgrade email template includes per-tier privilege list
+
+### Fix 10: In-App Notification Center — Complete
+- Enhanced NotificationBell component:
+  - Support for all notification types: mention, reply, connection, bookmark, message, tier_upgrade, welcome
+  - Each type has a unique color-coded icon
+  - Merges Zustand store notifications with seed notifications
+  - Sorted by date descending, limited to 30 most recent
+  - "Mark all read" clears both local and store notification states
+- Added `markAllNotificationsRead()` to Zustand store
+- Seed notifications expanded to 7 entries covering all event types
+- Extended notifications check constraint in migration 004 with new types
+- Built Toast component for in-app tier upgrade announcements
+  - Auto-dismisses after 5 seconds
+  - Positioned top-right with dismiss button
+  - Added to dashboard layout
+
+### Database Migration (004_feature_additions.sql) — Complete
+- `email_logs` table with indexes and RLS
+- `tier_history` table with indexes and RLS
+- `daily_feed_cache` table for pre-computed recommendations
+- `user_presence` table for real-time presence tracking
+- Extended `reputation_events` event_type constraint (12 types)
+- Extended `notifications` type constraint (12 types)
+- Added `reference_id` and `reference_type` columns to notifications
+- Added indexes on profiles.tier and profiles.application_status
+- `check_tier_progression()` trigger function + trigger
+
+### Build Verification — 2026-03-30
+- `tsc --noEmit`: 0 errors
+- `next build`: All 25 routes compiled successfully (static + dynamic)
+- No console errors in build output

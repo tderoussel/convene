@@ -128,7 +128,7 @@ export default function MessagesPage() {
             <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search members..." className="input mb-3" />
             <div className="flex-1 overflow-y-auto space-y-0.5">
               {availableMembers.map((member) => (
-                <Link key={member.id} href={`/dashboard/members/${member.id}`} onClick={() => setShowNewMessage(false)}
+                <Link key={member.id} href={`/dashboard/messages/new?to=${member.id}`} onClick={() => setShowNewMessage(false)}
                   className="flex items-center gap-3 p-2.5 rounded-md hover:bg-surface-light transition-colors">
                   {member.photo_url ? (
                     <img src={member.photo_url} alt={member.full_name} className="w-8 h-8 rounded-md object-cover" />

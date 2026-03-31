@@ -20,6 +20,9 @@ interface AppState {
   notifications: Notification[];
   unreadCount: number;
 
+  // Toast messages
+  toastMessage: string | null;
+
   // Actions
   login: (user: MemberProfile) => void;
   logout: () => void;
@@ -29,6 +32,11 @@ interface AppState {
   leaveRoom: (roomId: string) => void;
   addNotification: (notification: Notification) => void;
   markNotificationRead: (notificationId: string) => void;
+  markAllNotificationsRead: () => void;
+  showToast: (message: string) => void;
+  clearToast: () => void;
+  updateUserTier: (tier: MemberProfile['tier']) => void;
+  updateUserReputation: (score: number) => void;
 }
 
 // ── Store ──
@@ -44,6 +52,7 @@ export const useAppStore = create<AppState>()(
       joinedRoomIds: [],
       notifications: [],
       unreadCount: 0,
+      toastMessage: null,
 
       // ── Actions ──
 
@@ -103,6 +112,28 @@ export const useAppStore = create<AppState>()(
             unreadCount: Math.max(0, state.unreadCount - 1),
           };
         }),
+
+      markAllNotificationsRead: () =>
+        set((state) => ({
+          notifications: state.notifications.map((n) => ({ ...n, read: true })),
+          unreadCount: 0,
+        })),
+
+      showToast: (message) =>
+        set({ toastMessage: message }),
+
+      clearToast: () =>
+        set({ toastMessage: null }),
+
+      updateUserTier: (tier) =>
+        set((state) => ({
+          currentUser: state.currentUser ? { ...state.currentUser, tier } : null,
+        })),
+
+      updateUserReputation: (score) =>
+        set((state) => ({
+          currentUser: state.currentUser ? { ...state.currentUser, reputation_score: score } : null,
+        })),
     }),
     {
       name: 'alyned-store',

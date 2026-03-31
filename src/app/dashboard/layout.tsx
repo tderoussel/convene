@@ -3,6 +3,7 @@
 import { useAppStore } from "@/lib/store";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Logo from "@/components/ui/Logo";
+import Toast from "@/components/ui/Toast";
 
 export default function DashboardLayout({
   children,
@@ -39,6 +40,7 @@ export default function DashboardLayout({
       <main className="md:ml-56 pb-20 md:pb-0 min-h-screen">
         {children}
       </main>
+      <Toast />
     </div>
   );
 }

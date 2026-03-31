@@ -21,6 +21,7 @@ function timeAgo(dateStr: string): string {
 function notificationIcon(type: string) {
   switch (type) {
     case "mention":
+    case "room_mention":
       return (
         <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
           <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -29,6 +30,7 @@ function notificationIcon(type: string) {
         </div>
       );
     case "reply":
+    case "room_reply":
       return (
         <div className="w-7 h-7 rounded-md bg-blue-500/10 flex items-center justify-center shrink-0">
           <svg className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -36,6 +38,8 @@ function notificationIcon(type: string) {
           </svg>
         </div>
       );
+    case "new_connection":
+    case "bookmark_received":
     case "room_invite":
       return (
         <div className="w-7 h-7 rounded-md bg-success/10 flex items-center justify-center shrink-0">
@@ -52,6 +56,23 @@ function notificationIcon(type: string) {
           </svg>
         </div>
       );
+    case "new_message":
+    case "dm_received":
+      return (
+        <div className="w-7 h-7 rounded-md bg-violet-500/10 flex items-center justify-center shrink-0">
+          <svg className="w-3.5 h-3.5 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+          </svg>
+        </div>
+      );
+    case "welcome":
+      return (
+        <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+          <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+          </svg>
+        </div>
+      );
     default:
       return (
         <div className="w-7 h-7 rounded-md bg-surface-lighter flex items-center justify-center shrink-0">
@@ -63,7 +84,7 @@ function notificationIcon(type: string) {
   }
 }
 
-// Seed some demo notifications
+// Seed notifications covering all event types
 const seedNotifications: Notification[] = [
   {
     id: "n1",
@@ -88,22 +109,52 @@ const seedNotifications: Notification[] = [
   {
     id: "n3",
     user_id: "u1",
+    type: "new_connection",
+    title: "New connection",
+    body: "You and Sophie Zhang are now connected!",
+    link: "/dashboard/members/m2",
+    read: false,
+    created_at: "2026-03-28T20:00:00Z",
+  },
+  {
+    id: "n4",
+    user_id: "u1",
+    type: "bookmark_received",
+    title: "Bookmark received",
+    body: "Elena Vasquez bookmarked your profile",
+    link: "/dashboard/members/m4",
+    read: true,
+    created_at: "2026-03-28T16:00:00Z",
+  },
+  {
+    id: "n5",
+    user_id: "u1",
+    type: "new_message",
+    title: "New message",
+    body: "Nina Kowalski sent you a message",
+    link: "/dashboard/messages/conv-5",
+    read: true,
+    created_at: "2026-03-28T14:00:00Z",
+  },
+  {
+    id: "n6",
+    user_id: "u1",
     type: "room_invite",
     title: "Room invite",
     body: "You've been invited to join Catalyst Lounge",
     link: "/dashboard/rooms/r9",
     read: true,
-    created_at: "2026-03-28T16:00:00Z",
+    created_at: "2026-03-28T12:00:00Z",
   },
   {
-    id: "n4",
+    id: "n7",
     user_id: "u1",
-    type: "mention",
-    title: "Mentioned",
-    body: "Elena Martinez mentioned you in Product Builders",
-    link: "/dashboard/rooms/r3",
+    type: "welcome",
+    title: "Welcome to Alyned",
+    body: "Your application has been accepted. Start by exploring rooms and connecting with members.",
+    link: "/dashboard",
     read: true,
-    created_at: "2026-03-28T12:00:00Z",
+    created_at: "2026-03-25T09:00:00Z",
   },
 ];
 
@@ -111,10 +162,12 @@ export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState(seedNotifications);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { unreadCount } = useAppStore();
+  const { notifications: storeNotifications, unreadCount: storeUnread } = useAppStore();
 
+  // Merge store notifications with seed notifications
+  const allNotifications = [...storeNotifications, ...notifications];
   const localUnread = notifications.filter((n) => !n.read).length;
-  const totalUnread = localUnread + unreadCount;
+  const totalUnread = localUnread + storeUnread;
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -134,6 +187,7 @@ export default function NotificationBell() {
 
   const markAllRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    useAppStore.getState().markAllNotificationsRead();
   };
 
   return (
@@ -157,42 +211,45 @@ export default function NotificationBell() {
         <div className="absolute right-0 top-full mt-1 w-80 card shadow-lg z-50 animate-fade-in">
           <div className="flex items-center justify-between px-4 py-3 border-b border-border">
             <h3 className="text-sm font-semibold text-text-primary">Notifications</h3>
-            {localUnread > 0 && (
+            {totalUnread > 0 && (
               <button onClick={markAllRead} className="text-[11px] text-primary hover:text-primary-hover transition-colors">
                 Mark all read
               </button>
             )}
           </div>
           <div className="max-h-80 overflow-y-auto">
-            {notifications.length === 0 ? (
+            {allNotifications.length === 0 ? (
               <div className="px-4 py-8 text-center">
                 <p className="text-sm text-text-muted">No notifications yet.</p>
               </div>
             ) : (
-              notifications.map((n) => (
-                <Link
-                  key={n.id}
-                  href={n.link ?? "#"}
-                  onClick={() => {
-                    markAsRead(n.id);
-                    setIsOpen(false);
-                  }}
-                  className={`flex items-start gap-3 px-4 py-3 transition-colors hover:bg-surface-light ${
-                    !n.read ? "bg-primary/[0.03]" : ""
-                  }`}
-                >
-                  {notificationIcon(n.type)}
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-xs ${!n.read ? "text-text-primary font-medium" : "text-text-secondary"}`}>
-                      {n.body}
-                    </p>
-                    <p className="text-[10px] text-text-muted mt-0.5">{timeAgo(n.created_at)}</p>
-                  </div>
-                  {!n.read && (
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                  )}
-                </Link>
-              ))
+              allNotifications
+                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                .slice(0, 30)
+                .map((n) => (
+                  <Link
+                    key={n.id}
+                    href={n.link ?? "#"}
+                    onClick={() => {
+                      markAsRead(n.id);
+                      setIsOpen(false);
+                    }}
+                    className={`flex items-start gap-3 px-4 py-3 transition-colors hover:bg-surface-light ${
+                      !n.read ? "bg-primary/[0.03]" : ""
+                    }`}
+                  >
+                    {notificationIcon(n.type)}
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-xs ${!n.read ? "text-text-primary font-medium" : "text-text-secondary"}`}>
+                        {n.body}
+                      </p>
+                      <p className="text-[10px] text-text-muted mt-0.5">{timeAgo(n.created_at)}</p>
+                    </div>
+                    {!n.read && (
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                    )}
+                  </Link>
+                ))
             )}
           </div>
         </div>

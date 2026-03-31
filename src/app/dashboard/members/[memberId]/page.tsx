@@ -1,16 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useMemo, useState, useCallback } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAppStore } from "@/lib/store";
 import { seedProfiles } from "@/data/seedProfiles";
+import { seedConversations } from "@/data/seedConversations";
 import TierBadge from "@/components/ui/TierBadge";
 import { canDM, canElevate, getTierLabel } from "@/lib/tiers";
 import type { MemberProfile } from "@/types";
 
 export default function MemberProfilePage() {
   const params = useParams();
+  const router = useRouter();
   const memberId = params.memberId as string;
   const { currentUser } = useAppStore();
   const [elevated, setElevated] = useState(false);
@@ -19,6 +21,22 @@ export default function MemberProfilePage() {
     () => (seedProfiles as MemberProfile[]).find((p) => p.id === memberId) ?? null,
     [memberId]
   );
+
+  const handleSendMessage = useCallback(() => {
+    if (!currentUser || !member) return;
+    // Check if a conversation already exists between these two users
+    const existingConv = seedConversations.find((c) => {
+      const ids = [c.user_a, c.user_b];
+      return ids.includes(currentUser.id) && ids.includes(member.id);
+    });
+    if (existingConv) {
+      router.push(`/dashboard/messages/${existingConv.id}`);
+    } else {
+      // Create a new conversation ID and navigate to it
+      // In demo mode, we store it via URL params; the conversation page handles creation
+      router.push(`/dashboard/messages/new?to=${member.id}`);
+    }
+  }, [currentUser, member, router]);
 
   if (!member) {
     return (
@@ -75,7 +93,7 @@ export default function MemberProfilePage() {
               ) : (
                 <>
                   {canSendDM ? (
-                    <Link href="/dashboard/messages" className="btn-primary text-xs px-4 py-1.5">Send Message</Link>
+                    <button onClick={handleSendMessage} className="btn-primary text-xs px-4 py-1.5">Send Message</button>
                   ) : (
                     <div className="text-[11px] text-text-muted bg-surface-light border border-border rounded-md px-3 py-1.5">
                       Cannot DM this member

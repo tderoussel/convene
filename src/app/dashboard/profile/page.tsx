@@ -3,8 +3,12 @@
 import { useState } from "react";
 import { useAppStore } from "@/lib/store";
 import TierBadge from "@/components/ui/TierBadge";
+import AvatarUpload from "@/components/ui/AvatarUpload";
 import { TIER_THRESHOLDS, REPUTATION_POINTS } from "@/lib/constants";
 import { getTierLabel } from "@/lib/tiers";
+import { getReputationEvents, seedReputationData, getEventTypeLabel } from "@/lib/reputation";
+import { seedProfiles } from "@/data/seedProfiles";
+import type { MemberProfile } from "@/types";
 
 export default function ProfilePage() {
   const { currentUser, login } = useAppStore();
@@ -106,27 +110,35 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Reputation History */}
+      <ReputationHistory userId={currentUser.id} />
+
       {/* Edit Form */}
       <div className="card p-5 space-y-4">
         <h2 className="text-sm font-semibold text-text-primary">Edit Profile</h2>
 
-        {[
-          { name: "full_name", label: "Full Name", type: "text" },
-          { name: "photo_url", label: "Photo URL", type: "url", placeholder: "https://..." },
-          { name: "location", label: "Location", type: "text", placeholder: "San Francisco, CA" },
-        ].map((field) => (
-          <div key={field.name}>
-            <label className="block text-xs text-text-muted mb-1">{field.label}</label>
-            <input
-              type={field.type}
-              name={field.name}
-              value={form[field.name as keyof typeof form]}
-              onChange={handleChange}
-              placeholder={field.placeholder}
-              className="input"
-            />
-          </div>
-        ))}
+        <div>
+          <label className="block text-xs text-text-muted mb-1">Full Name</label>
+          <input type="text" name="full_name" value={form.full_name} onChange={handleChange} className="input" />
+        </div>
+
+        <AvatarUpload
+          currentUrl={form.photo_url || null}
+          name={form.full_name || "User"}
+          onUpload={(dataUrl) => {
+            setForm((prev) => ({ ...prev, photo_url: dataUrl }));
+            setSaved(false);
+          }}
+          onRemove={() => {
+            setForm((prev) => ({ ...prev, photo_url: "" }));
+            setSaved(false);
+          }}
+        />
+
+        <div>
+          <label className="block text-xs text-text-muted mb-1">Location</label>
+          <input type="text" name="location" value={form.location} onChange={handleChange} placeholder="San Francisco, CA" className="input" />
+        </div>
 
         <div>
           <label className="block text-xs text-text-muted mb-1">One-liner</label>
@@ -166,6 +178,62 @@ export default function ProfilePage() {
           {saved ? "Saved" : "Save changes"}
         </button>
       </div>
+    </div>
+  );
+}
+
+function ReputationHistory({ userId }: { userId: string }) {
+  const [expanded, setExpanded] = useState(false);
+
+  // Ensure seed data is loaded
+  seedReputationData(seedProfiles as MemberProfile[]);
+
+  const events = getReputationEvents(userId);
+  const recentEvents = expanded ? events.slice(-20).reverse() : events.slice(-5).reverse();
+
+  if (events.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="card p-5 mb-5">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex items-center justify-between w-full text-left"
+      >
+        <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider">
+          How you earned this
+        </h3>
+        <svg
+          className={`w-4 h-4 text-text-muted transition-transform ${expanded ? "rotate-180" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      <div className={`mt-3 space-y-1.5 ${expanded ? "" : "max-h-40 overflow-hidden"}`}>
+        {recentEvents.map((event) => (
+          <div key={event.id} className="flex items-center justify-between text-[11px]">
+            <span className="text-text-secondary">{getEventTypeLabel(event.event_type)}</span>
+            <span className={`font-mono ${event.points >= 0 ? "text-success" : "text-danger"}`}>
+              {event.points >= 0 ? "+" : ""}{event.points}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {events.length > 5 && !expanded && (
+        <button
+          onClick={() => setExpanded(true)}
+          className="text-[11px] text-primary hover:text-primary-hover transition-colors mt-2"
+        >
+          Show all ({events.length} events)
+        </button>
+      )}
     </div>
   );
 }

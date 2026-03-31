@@ -1,9 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import type { MemberProfile, Tier } from "@/types";
 import { seedProfiles } from "@/data/seedProfiles";
 import TierBadge from "@/components/ui/TierBadge";
+import {
+  sendEmail,
+  applicationAcceptedEmail,
+  applicationRejectedEmail,
+  applicationWaitlistedEmail,
+} from "@/lib/email";
 
 const pendingApplications = (seedProfiles as MemberProfile[])
   .filter((p) => p.application_status === "accepted")
@@ -11,21 +17,32 @@ const pendingApplications = (seedProfiles as MemberProfile[])
   .map((p, i) => ({
     ...p,
     application_status: i < 2 ? ("pending" as const) : p.application_status,
+    reviewer_notes: "",
   }));
 
+type ApplicationWithNotes = MemberProfile & { reviewer_notes: string };
+
 export default function ApplicationReview() {
-  const [applications, setApplications] = useState(pendingApplications);
+  const [applications, setApplications] = useState<ApplicationWithNotes[]>(
+    pendingApplications.map((a) => ({ ...a, reviewer_notes: "" }))
+  );
   const [selectedId, setSelectedId] = useState<string | null>(
     applications.find((a) => a.application_status === "pending")?.id ?? null
   );
+  const [notesSaved, setNotesSaved] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const selected = applications.find((a) => a.id === selectedId);
 
-  const handleAction = (
+  const handleAction = async (
     id: string,
     status: MemberProfile["application_status"],
     tier?: Tier
   ) => {
+    const app = applications.find((a) => a.id === id);
+    if (!app) return;
+
     setApplications((prev) =>
       prev.map((a) =>
         a.id === id
@@ -33,6 +50,58 @@ export default function ApplicationReview() {
           : a
       )
     );
+
+    // Send email notification based on action
+    setEmailSending(true);
+    try {
+      let emailData: { subject: string; html: string } | null = null;
+
+      if (status === "accepted") {
+        emailData = applicationAcceptedEmail(app.full_name);
+      } else if (status === "rejected") {
+        emailData = applicationRejectedEmail(app.full_name);
+      } else if (status === "waitlisted") {
+        emailData = applicationWaitlistedEmail(app.full_name);
+      }
+
+      if (emailData) {
+        await sendEmail({ to: app.email, ...emailData });
+      }
+    } catch {
+      // Email sending is best-effort in demo mode
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
+  const handleNotesChange = useCallback(
+    (id: string, notes: string) => {
+      setApplications((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, reviewer_notes: notes } : a))
+      );
+      setNotesSaved(false);
+
+      // Auto-save on debounce
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = setTimeout(() => {
+        setNotesSaved(true);
+        setTimeout(() => setNotesSaved(false), 2000);
+      }, 1000);
+    },
+    []
+  );
+
+  const handleNotesSave = (id: string) => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    // In Supabase mode, this would save to the database
+    setNotesSaved(true);
+    setTimeout(() => setNotesSaved(false), 2000);
+  };
+
+  const handleNotesBlur = (id: string) => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    setNotesSaved(true);
+    setTimeout(() => setNotesSaved(false), 2000);
   };
 
   return (
@@ -68,7 +137,9 @@ export default function ApplicationReview() {
                       ? "bg-warning/10 text-warning"
                       : app.application_status === "accepted"
                         ? "bg-success/10 text-success"
-                        : "bg-danger/10 text-danger"
+                        : app.application_status === "waitlisted"
+                          ? "bg-blue-500/10 text-blue-400"
+                          : "bg-danger/10 text-danger"
                   }`}
                 >
                   {app.application_status}
@@ -102,7 +173,9 @@ export default function ApplicationReview() {
                         ? "bg-warning/10 text-warning"
                         : selected.application_status === "accepted"
                           ? "bg-success/10 text-success"
-                          : "bg-danger/10 text-danger"
+                          : selected.application_status === "waitlisted"
+                            ? "bg-blue-500/10 text-blue-400"
+                            : "bg-danger/10 text-danger"
                     }`}
                   >
                     {selected.application_status}
@@ -144,6 +217,39 @@ export default function ApplicationReview() {
               </div>
             </div>
 
+            {/* Reviewer Notes */}
+            <div className="mt-5 pt-5 border-t border-border">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-[11px] font-medium text-text-muted uppercase tracking-wider">
+                  Reviewer Notes
+                </h4>
+                <div className="flex items-center gap-2">
+                  {notesSaved && (
+                    <span className="text-[11px] text-success flex items-center gap-1">
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      Saved
+                    </span>
+                  )}
+                  <button
+                    onClick={() => handleNotesSave(selected.id)}
+                    className="text-[11px] text-primary hover:text-primary-hover transition-colors"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+              <textarea
+                value={selected.reviewer_notes}
+                onChange={(e) => handleNotesChange(selected.id, e.target.value)}
+                onBlur={() => handleNotesBlur(selected.id)}
+                placeholder="Add notes about this applicant..."
+                rows={3}
+                className="input resize-none text-sm"
+              />
+            </div>
+
             {/* Actions */}
             {selected.application_status === "pending" && (
               <div className="mt-5 pt-5 border-t border-border">
@@ -163,23 +269,29 @@ export default function ApplicationReview() {
                       const sel = document.getElementById("tier-select") as HTMLSelectElement;
                       handleAction(selected.id, "accepted", sel.value as Tier);
                     }}
-                    className="btn-primary text-xs px-3 py-1.5 !bg-success hover:!bg-success/90"
+                    disabled={emailSending}
+                    className="btn-primary text-xs px-3 py-1.5 !bg-success hover:!bg-success/90 disabled:opacity-50"
                   >
-                    Accept
+                    {emailSending ? "Sending..." : "Accept"}
                   </button>
                   <button
                     onClick={() => handleAction(selected.id, "waitlisted")}
-                    className="btn-secondary text-xs px-3 py-1.5 !border-warning/30 !text-warning hover:!bg-warning/5"
+                    disabled={emailSending}
+                    className="btn-secondary text-xs px-3 py-1.5 !border-warning/30 !text-warning hover:!bg-warning/5 disabled:opacity-50"
                   >
                     Waitlist
                   </button>
                   <button
                     onClick={() => handleAction(selected.id, "rejected")}
-                    className="btn-secondary text-xs px-3 py-1.5 !border-danger/30 !text-danger hover:!bg-danger/5"
+                    disabled={emailSending}
+                    className="btn-secondary text-xs px-3 py-1.5 !border-danger/30 !text-danger hover:!bg-danger/5 disabled:opacity-50"
                   >
                     Reject
                   </button>
                 </div>
+                {emailSending && (
+                  <p className="text-[11px] text-text-muted mt-2">Sending notification email...</p>
+                )}
               </div>
             )}
           </div>

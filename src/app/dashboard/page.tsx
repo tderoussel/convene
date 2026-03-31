@@ -9,6 +9,8 @@ import { seedProfiles } from "@/data/seedProfiles";
 import TierBadge from "@/components/ui/TierBadge";
 import { TIER_THRESHOLDS } from "@/lib/constants";
 import { getTierLabel } from "@/lib/tiers";
+import { generateDailyFeed } from "@/lib/feedAlgorithm";
+import type { MemberProfile } from "@/types";
 
 function timeAgo(dateStr: string): string {
   const now = new Date("2026-03-29T12:00:00Z");
@@ -117,6 +119,9 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Daily Feed */}
+      <DailyFeed currentUser={currentUser} />
+
       {/* Your Rooms */}
       <section className="mb-8">
         <div className="flex items-center justify-between mb-3">
@@ -199,5 +204,59 @@ export default function DashboardPage() {
         </section>
       )}
     </div>
+  );
+}
+
+function DailyFeed({ currentUser }: { currentUser: MemberProfile }) {
+  const feedMembers = useMemo(
+    () => generateDailyFeed(currentUser, seedProfiles as MemberProfile[], "2026-03-29"),
+    [currentUser]
+  );
+
+  return (
+    <section className="mb-8">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h2 className="text-sm font-semibold text-text-primary">Today&apos;s Matches</h2>
+          <p className="text-[11px] text-text-muted mt-0.5">5 members curated for you daily</p>
+        </div>
+        <Link href="/dashboard/members" className="text-xs text-primary hover:text-primary-hover transition-colors">
+          Browse all
+        </Link>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        {feedMembers.map((member) => (
+          <Link
+            key={member.id}
+            href={`/dashboard/members/${member.id}`}
+            className="card-hover p-4 text-center"
+          >
+            {member.photo_url ? (
+              <img
+                src={member.photo_url}
+                alt={member.full_name}
+                className="w-12 h-12 rounded-lg object-cover mx-auto mb-2"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-lg bg-surface-lighter flex items-center justify-center text-sm font-medium text-text-muted mx-auto mb-2">
+                {member.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
+              </div>
+            )}
+            <p className="text-xs font-medium text-text-primary truncate">{member.full_name}</p>
+            <TierBadge tier={member.tier} size="sm" />
+            {member.one_liner && (
+              <p className="text-[11px] text-text-muted mt-1 line-clamp-2 leading-relaxed">
+                {member.one_liner}
+              </p>
+            )}
+            {member.what_looking_for && (
+              <span className="inline-block mt-1.5 px-1.5 py-0.5 rounded text-[10px] bg-primary/10 text-primary border border-primary/20">
+                {member.what_looking_for}
+              </span>
+            )}
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }

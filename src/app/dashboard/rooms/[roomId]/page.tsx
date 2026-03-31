@@ -144,7 +144,20 @@ export default function RoomDetailPage() {
             </Link>
             <div className="min-w-0">
               <h1 className="text-sm font-semibold text-text-primary truncate">{room.name}</h1>
-              <p className="text-[11px] text-text-muted truncate">{room.member_count} members</p>
+              <p className="text-[11px] text-text-muted truncate">
+                {room.member_count} members
+                {messages.length > 0 && (
+                  <> &middot; Last message {(() => {
+                    const last = messages[messages.length - 1];
+                    const now = new Date("2026-03-29T12:00:00Z");
+                    const date = new Date(last.created_at);
+                    const hours = Math.floor((now.getTime() - date.getTime()) / 3600000);
+                    if (hours < 1) return "just now";
+                    if (hours < 24) return `${hours}h ago`;
+                    return `${Math.floor(hours / 24)}d ago`;
+                  })()}</>
+                )}
+              </p>
             </div>
           </div>
           <div>
