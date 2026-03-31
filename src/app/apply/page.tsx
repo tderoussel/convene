@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
-import { seedProfiles } from '@/data/seedProfiles';
+import { USE_SUPABASE } from '@/lib/feature-flags';
 import Logo from '@/components/ui/Logo';
 
 interface StepData {
@@ -23,11 +23,21 @@ interface StepData {
 
 const STEPS = ['Account', 'Profile', 'About', 'Review'] as const;
 
+/**
+ * Generate a simple referral code from a name.
+ */
+function generateReferralCode(name: string): string {
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const rand = Math.random().toString(36).substring(2, 6);
+  return `${slug}-${rand}`;
+}
+
 export default function ApplyPage() {
   const router = useRouter();
   const { login } = useAppStore();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof StepData, string>>>({});
 
   const [data, setData] = useState<StepData>({
@@ -66,19 +76,118 @@ export default function ApplyPage() {
 
   async function handleSubmit() {
     setSubmitting(true);
+
+    if (USE_SUPABASE) {
+      // ── Supabase mode: create real auth account + profile ──
+      try {
+        const { createClient } = await import('@/lib/supabase/client');
+        const supabase = createClient();
+
+        // 1. Sign up with Supabase Auth
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: data.email,
+          password: data.password,
+          options: {
+            data: { full_name: data.fullName },
+          },
+        });
+
+        if (authError) {
+          setErrors({ email: authError.message });
+          setSubmitting(false);
+          return;
+        }
+
+        if (authData.user) {
+          // 2. Insert profile row (application_status = 'pending' for review)
+          await supabase.from('profiles').upsert({
+            id: authData.user.id,
+            email: data.email,
+            full_name: data.fullName,
+            photo_url: data.photoUrl || null,
+            linkedin_url: data.linkedinUrl || null,
+            company_url: data.companyUrl || null,
+            location: data.location || null,
+            one_liner: data.oneLiner || null,
+            what_looking_for: data.lookingFor || null,
+            offer_statement: data.offerStatement || null,
+            tier: 'explorer',
+            reputation_score: 0,
+            application_status: 'pending',
+            is_onboarded: false,
+          });
+        }
+
+        // Show confirmation instead of auto-login
+        setSubmitted(true);
+        setSubmitting(false);
+        return;
+      } catch {
+        setErrors({ email: 'Something went wrong. Please try again.' });
+        setSubmitting(false);
+        return;
+      }
+    }
+
+    // ── Demo mode: create a clean user object (no seed data spread) ──
     await new Promise((resolve) => setTimeout(resolve, 1200));
-    const demoUser = {
-      ...seedProfiles[0],
-      id: 'demo-new-user', email: data.email, full_name: data.fullName,
-      photo_url: data.photoUrl || null, linkedin_url: data.linkedinUrl || null,
-      company_url: data.companyUrl || null, location: data.location || null,
-      one_liner: data.oneLiner || null, what_looking_for: data.lookingFor || null,
+
+    const newUser = {
+      id: `user-${Date.now()}`,
+      email: data.email,
+      full_name: data.fullName,
+      photo_url: data.photoUrl || null,
+      linkedin_url: data.linkedinUrl || null,
+      company_url: data.companyUrl || null,
+      location: data.location || null,
+      one_liner: data.oneLiner || null,
+      what_looking_for: data.lookingFor || null,
       offer_statement: data.offerStatement || null,
-      tier: 'explorer' as const, reputation_score: 0, total_room_posts: 0,
-      application_status: 'accepted' as const, is_onboarded: true,
+      tier: 'explorer' as const,
+      reputation_score: 0,
+      total_room_posts: 0,
+      application_status: 'accepted' as const,
+      is_onboarded: true,
+      referral_code: generateReferralCode(data.fullName),
+      created_at: new Date().toISOString(),
     };
-    login(demoUser);
+
+    // Store in localStorage so they can log back in later
+    try {
+      const stored = JSON.parse(localStorage.getItem('alyned-registered-users') || '[]');
+      stored.push({ email: data.email, password: data.password, profile: newUser });
+      localStorage.setItem('alyned-registered-users', JSON.stringify(stored));
+    } catch { /* ignore storage errors */ }
+
+    login(newUser);
     router.push('/dashboard');
+  }
+
+  // ── Application submitted (Supabase mode) ──
+  if (submitted) {
+    return (
+      <div className="min-h-screen">
+        <header className="border-b border-border">
+          <div className="max-w-xl mx-auto px-6 h-14 flex items-center justify-between">
+            <Link href="/"><Logo size="sm" /></Link>
+          </div>
+        </header>
+        <div className="max-w-xl mx-auto px-6 py-20 text-center">
+          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+            <svg className="w-7 h-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h1 className="text-xl font-semibold text-text-primary mb-2">Application received</h1>
+          <p className="text-sm text-text-muted max-w-sm mx-auto mb-6">
+            Thanks, {data.fullName}! We&apos;ll review your application and get back to you within a few days. Check your email for a confirmation.
+          </p>
+          <Link href="/" className="btn-secondary text-sm px-6 py-2 inline-block">
+            Back to home
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (

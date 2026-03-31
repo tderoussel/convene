@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
 import { seedProfiles } from '@/data/seedProfiles';
+import { USE_SUPABASE } from '@/lib/feature-flags';
 import Logo from '@/components/ui/Logo';
+import type { MemberProfile } from '@/types';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,19 +28,96 @@ export default function LoginPage() {
     }
 
     setLoading(true);
+
+    if (USE_SUPABASE) {
+      // ── Supabase mode: real authentication ──
+      try {
+        const { createClient } = await import('@/lib/supabase/client');
+        const supabase = createClient();
+
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
+
+        if (authError) {
+          setError(authError.message);
+          setLoading(false);
+          return;
+        }
+
+        if (authData.user) {
+          // Fetch the user's profile from the profiles table
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', authData.user.id)
+            .single();
+
+          if (profileError || !profile) {
+            setError('Account found but profile not set up. Please contact support.');
+            setLoading(false);
+            return;
+          }
+
+          // Check if application has been accepted
+          if (profile.application_status === 'pending') {
+            await supabase.auth.signOut();
+            setError('Your application is still under review. We\'ll email you when it\'s accepted.');
+            setLoading(false);
+            return;
+          }
+
+          if (profile.application_status === 'rejected') {
+            await supabase.auth.signOut();
+            setError('Your application was not accepted. You can reapply after 90 days.');
+            setLoading(false);
+            return;
+          }
+
+          login(profile as MemberProfile);
+          router.push('/dashboard');
+        }
+      } catch {
+        setError('Something went wrong. Please try again.');
+        setLoading(false);
+      }
+      return;
+    }
+
+    // ── Demo mode: check seed profiles + locally registered users ──
     await new Promise((resolve) => setTimeout(resolve, 800));
 
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Check seed profiles first
     const matchedProfile = seedProfiles.find(
-      (p) => p.email.toLowerCase() === email.trim().toLowerCase()
+      (p) => p.email.toLowerCase() === normalizedEmail
     );
 
     if (matchedProfile) {
       login(matchedProfile);
       router.push('/dashboard');
-    } else {
-      setError('Invalid credentials. Try demo mode or check your email.');
-      setLoading(false);
+      return;
     }
+
+    // Check locally registered users (from apply page in demo mode)
+    try {
+      const stored = JSON.parse(localStorage.getItem('alyned-registered-users') || '[]');
+      const matchedUser = stored.find(
+        (u: { email: string; password: string; profile: MemberProfile }) =>
+          u.email.toLowerCase() === normalizedEmail && u.password === password
+      );
+
+      if (matchedUser) {
+        login(matchedUser.profile);
+        router.push('/dashboard');
+        return;
+      }
+    } catch { /* ignore parse errors */ }
+
+    setError('Invalid credentials. Try demo mode or check your email.');
+    setLoading(false);
   }
 
   function handleDemoLogin() {
